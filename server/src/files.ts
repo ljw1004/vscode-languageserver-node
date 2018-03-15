@@ -52,9 +52,9 @@ export function resolveModule(workspaceRoot: string, moduleName: string): Thenab
 		if (workspaceRoot) {
 			nodePath.push(path.join(workspaceRoot, 'node_modules'));
 		}
-		exec('npm config get prefix', (error: Error, stdout: Buffer, _stderr: Buffer) => {
+		exec('npm config get prefix', (error: Error, stdout: string, _stderr: string) => {
 			if (!error) {
-				let globalPath = stdout.toString().replace(/[\s\r\n]+$/, '');
+				let globalPath = stdout.replace(/[\s\r\n]+$/, '');
 				if (globalPath.length > 0) {
 					if (isWindows()) {
 						nodePath.push(path.join(globalPath, 'node_modules'));
@@ -101,7 +101,7 @@ export function resolveModule(workspaceRoot: string, moduleName: string): Thenab
 }
 
 
-export function resolve(moduleName: string, nodePath: string | undefined, cwd: string, tracer: (message: string, verbose?: string) => void): Thenable<string> {
+export function resolve(moduleName: string, nodePath: string | undefined, cwd: string | undefined, tracer: (message: string, verbose?: string) => void): Thenable<string> {
 	interface Message {
 		c: string;
 		s?: boolean;
@@ -204,6 +204,39 @@ export function resolveGlobalNodePath(tracer?: (message: string) => void): strin
 	return undefined;
 }
 
+interface YarnJsonFormat {
+	type: string;
+	data: string;
+}
+
+export function resolveGlobalYarnPath(tracer?: (message: string) => void): string | undefined {
+    let yarnCommand = isWindows() ? 'yarn.cmd' : 'yarn';
+	let results = spawnSync(yarnCommand, ['global', 'dir', '--json'], {
+		encoding: 'utf8'
+	});
+	let stdout = results.stdout;
+	if (!stdout) {
+		if (tracer) {
+			tracer(`'yarn global dir' didn't return a value.`);
+			if (results.stderr) {
+				tracer(results.stderr);
+			}
+		}
+		return undefined;
+	}
+	let lines = stdout.trim().split(/\r?\n/);
+	for (let line of lines) {
+		try {
+			let yarn: YarnJsonFormat = JSON.parse(line);
+			if (yarn.type === 'log') {
+				return path.join(yarn.data, 'node_modules');
+			}
+		} catch (e) {
+			// Do nothing. Ignore the line
+		}
+	}
+	return undefined;
+}
 
 export namespace FileSystem {
 
@@ -236,13 +269,14 @@ export function resolveModulePath(workspaceRoot: string, moduleName: string, nod
 		if (!path.isAbsolute(nodePath)) {
 			nodePath = path.join(workspaceRoot, nodePath);
 		}
+
 		return resolve(moduleName, nodePath, nodePath, tracer).then((value) => {
 			if (FileSystem.isParent(nodePath, value)) {
 				return value;
 			} else {
 				return Promise.reject<string>(new Error(`Failed to load ${moduleName} from node path location.`));
 			}
-		}).then(undefined, (_error: any) => {
+		}).then<string, string>(undefined, (_error: any) => {
 			return resolve(moduleName, resolveGlobalNodePath(tracer), workspaceRoot, tracer);
 		});
 	} else {

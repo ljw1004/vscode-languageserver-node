@@ -1,11 +1,11 @@
 {
 	"name": "vscode-languageclient",
 	"description": "VSCode Language client implementation",
-	"version": "3.3.0-alpha.1",
+	"version": "4.0.0",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
 	"engines": {
-		"vscode": "^1.8.0"
+		"vscode": "^1.20"
 	},
 	"repository": {
 		"type": "git",
@@ -17,18 +17,17 @@
 	"main": "./lib/main.js",
 	"typings": "./lib/main",
 	"devDependencies": {
-		"typescript": "^2.3.0",
-		"vscode": "^1.1.0",
-		"@types/node": "^6.0.68"
+		"vscode": "^1.1.5"
 	},
 	"dependencies": {
-		"vscode-jsonrpc": "^3.3.0-alpha.1",
-		"vscode-languageserver-types": "^3.3.0-alpha.1"
+		"vscode-languageserver-protocol": "^3.6.0"
 	},
 	"scripts": {
-		"prepublish": "node ./node_modules/vscode/bin/install && tsc -p ./src",
-		"compile": "tsc -p ./src",
-		"watch": "tsc -w -p ./src",
-		"update-vscode": "node ./node_modules/vscode/bin/install"
+		"prepublish": "npm run update-vscode && npm run compile && npm test",
+		"postpublish": "node ../build/npm/post-publish.js",
+		"compile": "node ../build/bin/tsc -p ./tsconfig.json",
+		"watch": "node ../build/bin/tsc -w -p ./tsconfig.json",
+		"update-vscode": "node ./node_modules/vscode/bin/install",
+		"test": "cd lib && node ../node_modules/vscode/bin/test"
 	}
 }

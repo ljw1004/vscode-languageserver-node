@@ -1,7 +1,7 @@
 {
 	"name": "vscode-languageserver",
 	"description": "Language server implementation for node",
-	"version": "3.3.0-alpha.7",
+	"version": "4.0.0",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
 	"repository": {
@@ -16,19 +16,14 @@
 		"installServerIntoExtension": "./bin/installServerIntoExtension"
 	},
 	"typings": "./lib/main",
-	"devDependencies": {
-		"mocha": "3.2.0",
-		"typescript": "^2.3.0",
-		"@types/node": "^6.0.68",
-		"@types/mocha": "^2.2.40"
-	},
 	"dependencies": {
-		"vscode-jsonrpc": "^3.3.0-alpha.1",
-		"vscode-languageserver-types": "^3.3.0-alpha.1"
+		"vscode-uri": "^1.0.1",
+		"vscode-languageserver-protocol": "^3.6.0"
 	},
 	"scripts": {
-		"prepublish": "tsc -p ./src",
-		"compile": "tsc -p ./src",
-		"watch": "tsc -w -p ./src"
+		"prepublish": "npm run compile",
+		"postpublish": "node ../build/npm/post-publish.js",
+		"compile": "node ../build/bin/tsc -p ./tsconfig.json",
+		"watch": "node ../build/bin/tsc -w -p ./tsconfig.json"
 	}
 }

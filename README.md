@@ -8,6 +8,9 @@ This repository contains the code for the following npm modules:
 * _vscode-languageserver_: npm module to implement a VSCode language server using [Node.js](https://nodejs.org/) as a runtime:<br>
 [![NPM Version](https://img.shields.io/npm/v/vscode-languageserver.svg)](https://npmjs.org/package/vscode-languageserver)
 [![NPM Downloads](https://img.shields.io/npm/dm/vscode-languageserver.svg)](https://npmjs.org/package/vscode-languageserver)
+* _vscode-languageserver-protocol_: the actual language server protocol definition in TypeScript:<br>
+[![NPM Version](https://img.shields.io/npm/v/vscode-languageserver-protocol.svg)](https://npmjs.org/package/vscode-languageserver-protocol)
+[![NPM Downloads](https://img.shields.io/npm/dm/vscode-languageserver-protocol.svg)](https://npmjs.org/package/vscode-languageserver-protocol)
 * _vscode-languageserver-types_: data types used by the language server client and server:<br>
 [![NPM Version](https://img.shields.io/npm/v/vscode-languageserver-types.svg)](https://npmjs.org/package/vscode-languageserver-types)
 [![NPM Downloads](https://img.shields.io/npm/dm/vscode-languageserver-types.svg)](https://npmjs.org/package/vscode-languageserver-types)
@@ -19,10 +22,50 @@ All four npm modules are built using one travis build. Its status is:
 
 [![Build Status](https://travis-ci.org/Microsoft/vscode-languageserver-node.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-languageserver-node)
 
-Click [here](https://code.visualstudio.com/docs/extensions/example-language-server) for a detailed document on how to use these npm modules to implement 
+Click [here](https://code.visualstudio.com/docs/extensions/example-language-server) for a detailed document on how to use these npm modules to implement
 language servers for [VSCode](https://code.visualstudio.com/).
 
 ## History
+
+### 4.0.0 Server and Client
+
+* implemented the latest protocol additions. Noteworthy are completion context, extensible completion item and symbol kind as well as markdown support for completion item and signature help. Moved to 4.0.0 version since the introduction of the completion context required a breaking change in the client middleware. The old signature:
+```typescript
+provideCompletionItem?: (this: void, document: TextDocument, position: VPosition, token: CancellationToken, next: ProvideCompletionItemsSignature) => ProviderResult<VCompletionItem[] | VCompletionList>;
+```
+contains now an additional argument `context`:
+```typescript
+provideCompletionItem?: (this: void, document: TextDocument, position: VPosition, context: VCompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => ProviderResult<VCompletionItem[] | VCompletionList>;
+```
+
+* Noteworthy fixes:
+  * [Getting value after executing command programmatically](https://github.com/Microsoft/language-server-protocol/issues/329)
+  * [Experiencing infinite recursion in this code in VSCode 1.18.1](https://github.com/Microsoft/language-server-protocol/issues/279)
+  * [LangaueClient#handleConnectionClosed fails to restart if this._resolvedConnection.dispose() throws](https://github.com/Microsoft/vscode-languageserver-node/issues/286)
+
+### 3.5.0 Server and Client
+
+* allow the client to start the server in detached mode. If the server is running detached the client will not monitor the server process and kill it on shutdown.
+* bug fixing.
+
+### 3.4.0 Server and Client
+
+* a new npm module `vscode-languageserver-protocol` has been added which contains the protocol definitions in TypeScript. This module is now shared between the client and the server.
+* support for proposed protocol has been added to the `protocol`, `client` and `server` npm modules. Proposed protocol is subject to change even if it ships in a stable version of the npm modules.
+* proposed protocol has been added for the following features:
+  * _configuration_: support to fetch configuration settings by sending a request from the server to the client
+  * _workspaceFolders_: support to handle more than one root folder per workspace
+  * _colorProvider_: support to compute color ranges for a document
+
+### 3.3.0 Server and Client
+
+* splitted the client into a base client and a main client to support reusing the client implementation in other environments.
+* made the request processing more async. So instead of processing a request immediatelly when the code gets notified by a Node.js callback the request is now put into a queue and processed from the queue. This allows for better dropping or folding of events if necessary.
+* bugs fixes see [April](https://github.com/Microsoft/vscode-languageserver-node/issues?q=is%3Aissue+milestone%3A%22April+2017%22+is%3Aclosed) and [May](https://github.com/Microsoft/vscode-languageserver-node/issues?q=is%3Aissue+is%3Aclosed+milestone%3A%22Mai+2017%22)
+
+### 3.2.1 Server and Client
+
+* Fixed [Using wrong name for method `client/registerFeature`: should be `client/registerCapability`](https://github.com/Microsoft/vscode-languageserver-node/issues/199)
 
 ### 3.2.0 Server and Client
 
@@ -40,7 +83,7 @@ language servers for [VSCode](https://code.visualstudio.com/).
 ### 3.0.5 Server and 3.0.4 Client
 
 * deprecated `Files.uriToFilePath` in favour of the vscode-uri npm module which provides a more complete implementation of URI for VS Code.
-* made `rootPath` optional since it is deprecated in 3.x. 
+* made `rootPath` optional since it is deprecated in 3.x.
 
 ### 3.0.3: Client, Server and JSON-RPC
 
@@ -122,7 +165,7 @@ export namespace MyNotification {
 
 ### 2.3.0: Client only
 
-* the client now restarts the server if the server crashes without a prior exit notification sent. The strategy used to restart the server is pluggable (see `LanguageClientOptions.errorHandler`). The default strategy restart the server unless it crashed 5 times or more in the last 3 minutes. 
+* the client now restarts the server if the server crashes without a prior exit notification sent. The strategy used to restart the server is pluggable (see `LanguageClientOptions.errorHandler`). The default strategy restart the server unless it crashed 5 times or more in the last 3 minutes.
 
 ### 2.0: A detailed desciption of the 2.0 version can be found [here](https://github.com/Microsoft/vscode-languageserver-protocol/blob/master/README.md). A summary of the changes:
 

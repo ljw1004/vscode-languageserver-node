@@ -1,7 +1,7 @@
 {
 	"name": "vscode-languageserver-types",
 	"description": "Types used by the Language server for node",
-	"version": "3.3.0-alpha.1",
+	"version": "3.6.1",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
 	"repository": {
@@ -11,18 +11,17 @@
 	"bugs": {
 		"url": "https://github.com/Microsoft/vscode-languageserver-node/issues"
 	},
-	"main": "./lib/main.js",
-	"typings": "./lib/main",
-	"devDependencies": {
-		"mocha": "^3.2.0",
-		"typescript": "^2.3.0",
-		"@types/node": "^6.0.68",
-		"@types/mocha": "^2.2.40"
-	},
+	"main": "./lib/umd/main.js",
+	"typings": "./lib/umd/main",
+	"module": "./lib/esm/main.js",
 	"scripts": {
-		"prepublish": "tsc -p ./src",
-		"compile": "tsc -p ./src",
-		"watch": "tsc -w -p ./src",
-		"test": "mocha"
+		"prepublishOnly": "npm run clean && npm run compile-esm && npm run test",
+		"postpublish": "node ../build/npm/post-publish.js",
+		"postinstall": "npm run compile",
+		"compile": "node ../build/bin/tsc -p ./tsconfig.json",
+		"compile-esm": "node ../build/bin/tsc -p ./tsconfig.esm.json",
+		"clean": "node ../node_modules/.bin/rimraf lib",
+		"watch": "node ../build/bin/tsc -w -p ./tsconfig.json",
+		"test": "npm run compile && node ../node_modules/mocha/bin/_mocha"
 	}
 }
